@@ -6,26 +6,23 @@
 #include <stdio.h>
 
 int main(int, char**) {
-	struct mnist_training_data mnist_data;
+	struct training_set dataset;
 
-	int ret = mnist_training_init(&mnist_data);
+	int ret = mnist_training_init(&dataset);
 	if(ret == -1) return -1;
 
-	struct layer *l1 = CREATE_HIDDEN_LAYER(3, 0, SIGMOID);
-	struct layer *l2 = CREATE_HIDDEN_LAYER(3, 0, SIGMOID);
-	struct layer *l3 = CREATE_HIDDEN_LAYER(3, 0, SIGMOID);
-	struct layer *l4 = CREATE_HIDDEN_LAYER(3, 0, SIGMOID);
-	struct layer *l5 = CREATE_HIDDEN_LAYER(3, 0, SIGMOID);
+	struct layer *l1 = CREATE_HIDDEN_LAYER(dataset.hidden_nodes, 0, SIGMOID);
+	struct layer *l2 = CREATE_HIDDEN_LAYER(dataset.hidden_nodes, 0, SIGMOID);
 
 	printf("antwerp: establishing network connections\n");
 
-	ret = initialise_layers(l1, l2, l3, l4, l5, NULL);
+	ret = initialise_layers(l1, l2, NULL);
 	if(ret == -1) return -1;
 
-	struct layer *input = create_input_layer(l1, 6);
+	struct layer *input = create_input_layer(l1, dataset.input_nodes);
 	if(input == NULL) return -1;
 
-	struct layer *output = create_output_layer(l5, SIGMOID, 2);
+	struct layer *output = create_output_layer(l2, SIGMOID, dataset.output_nodes);
 	if(input == NULL) return -1;
 	
 	struct network network = {
@@ -43,8 +40,6 @@ int main(int, char**) {
 		printf("antwerp: failure during forward propagation\n");
 		return -1;
 	}
-
-	display_network(&network);
 
 	return 0;
 }

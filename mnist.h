@@ -1,6 +1,8 @@
 #ifndef MNIST_H_
 #define MNIST_H_
 
+#include <training.h>
+
 #include <sys/stat.h>
 
 #include <stdint.h>
@@ -56,7 +58,7 @@ struct mnist_training_data {
 	struct mnist_label_set *label_set;
 };
 
-int mnist_training_init(struct mnist_training_data *training_data);
+int mnist_training_init(struct training_set *training_set);
 int mnist_get_image(struct mnist_image_set *image_set, struct mnist_image *image, uint32_t n);
 int mnist_get_label(struct mnist_label_set *label_set, struct mnist_label *label, uint32_t n);
 

@@ -5,27 +5,27 @@
 
 #include <math.h> 
 
-struct sample;
+struct sample {
+	int length;
+	void *data;
+
+	int expected;
+};
 
 struct training_set {
 	struct network *network;
 
 	int input_nodes;
+	int hidden_nodes;
 	int output_nodes;
 
-	float (*cost)(struct sample*, void*, float);
+	float (*cost)(struct sample*, float);
 
-	int sample_cnt;
-	struct sample *samples;
+	void *private;
+	int (*get_sample)(void*, struct sample*, int);
 };
 
-struct sample {
-	int length;
-	void *data;
-	int expected;
-};
-
-static inline float cost_mse(struct sample *sample, void*, float y) {
+static inline float cost_mse(struct sample *sample, float y) {
 	if(sample == NULL) return NAN;
 	return (sample->expected - y) * (sample->expected - y);
 }
