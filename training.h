@@ -30,4 +30,6 @@ static inline float cost_mse(struct sample *sample, float y) {
 	return (sample->expected - y) * (sample->expected - y);
 }
 
+int train(struct network *network);
+
 #endif

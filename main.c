@@ -1,6 +1,7 @@
 #include <network.h>
 #include <propagation.h>
 #include <activation.h>
+#include <training.h>
 #include <mnist.h>
 
 #include <stdio.h>
@@ -26,20 +27,14 @@ int main(int, char**) {
 	if(input == NULL) return -1;
 	
 	struct network network = {
+		.training_set = &dataset,
 		.input = input,
 		.hidden = l1,
 		.output = output
 	};
 
-	for(int i = 0; i < input->n; i++) input->perceptrons[i].y = i;
-
-	printf("antwerp: forward propagating\n");
-
-	ret = forward_propagate(&network);
-	if(ret == -1) {
-		printf("antwerp: failure during forward propagation\n");
-		return -1;
-	}
+	ret = train(&network);
+	if(ret == -1) return -1;
 
 	return 0;
 }
