@@ -19,13 +19,13 @@ struct training_set {
 	int hidden_nodes;
 	int output_nodes;
 
-	float (*cost)(struct sample*, float);
+	double (*cost)(struct sample*, double);
 
 	void *private;
 	int (*get_sample)(void*, struct sample*, int);
 };
 
-static inline float cost_mse(struct sample *sample, float y) {
+static inline double cost_mse(struct sample *sample, double y) {
 	if(sample == NULL) return NAN;
 	return (sample->expected - y) * (sample->expected - y);
 }

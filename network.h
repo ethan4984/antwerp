@@ -9,12 +9,12 @@ struct perceptron;
 
 struct signal {
 	struct perceptron *emitter;
-	float weight;
+	double weight;
 };
 
 struct perceptron {
-	float x;
-	float y;
+	double x;
+	double y;
 
 	int n;
 
@@ -51,8 +51,12 @@ struct network {
 	_layer; \
 })
 
+#define DISPLAY_HIDE_INPUT (1 << 0)
+#define DISPLAY_HIDE_OUTPUT (1 << 1)
+#define DISPLAY_HIDE_HIDDEN (1 << 2)
+
 int initialise_layers(struct layer *root, ...);
-int display_network(struct network *network);
+int display_network(struct network *network, int flags);
 
 struct layer *create_input_layer(struct layer *joint, int n);
 struct layer *create_output_layer(struct layer *joint, struct activation activation, int n);

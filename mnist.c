@@ -43,7 +43,7 @@ int mnist_get_label(struct mnist_label_set *label_set, struct mnist_label *label
 	if(label_set == NULL || label == NULL ||
 			label_set->hdr.item_cnt < n) return -1;
 
-	label->expected = *(uint8_t*)(label_set + sizeof(struct mnist_label_hdr) + n);
+	label->expected = *(uint8_t*)(label_set->data + sizeof(struct mnist_label_hdr) + n);
 
 	return 0;
 }

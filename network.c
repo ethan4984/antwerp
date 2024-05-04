@@ -19,7 +19,7 @@ static int initialise_layer(struct layer *layer) {
 				perceptron->n, 1);
 
 		for(int j = 0; j < perceptron->n; j++) {
-			perceptron->signals[j].weight = (float)rand() / RAND_MAX;
+			perceptron->signals[j].weight = (double)rand() / RAND_MAX * (double)0.001;
 		}
 	}
 
@@ -59,7 +59,7 @@ struct layer *create_input_layer(struct layer *joint, int n) {
 
 		for(int j = 0; j < input->n; j++) {
 			perceptron->signals[j].emitter = &input->perceptrons[j];
-			perceptron->signals[j].weight = (float)rand() / RAND_MAX;
+			perceptron->signals[j].weight = (double)rand() / RAND_MAX * (double)0.001;
 		}
 	}
 
@@ -83,7 +83,7 @@ struct layer *create_output_layer(struct layer *joint, struct activation activat
 
 		for(int j = 0; j < joint->n; j++) {
 			perceptron->signals[j].emitter = &joint->perceptrons[j];
-			perceptron->signals[j].weight = (float)rand() / RAND_MAX;
+			perceptron->signals[j].weight = (double)rand() / RAND_MAX * (double)0.001;
 		}
 	}
 
@@ -137,28 +137,29 @@ static int display_layer(struct layer *layer) {
 	return 0;
 }
 
-int display_network(struct network *network) {
+int display_network(struct network *network, int flags) {
 	if(network == NULL) return -1;
 
-	printf("antwerp: input layer:\n\t1: ");
+	int line = 0;
 
-	display_layer(network->input);
+	if((flags & DISPLAY_HIDE_INPUT) == 0) {
+		printf("antwerp: input layer:\n\t%d: ", line++);
+		display_layer(network->input);
+	} else if((flags & DISPLAY_HIDE_HIDDEN) == 0) {
+		printf("antwerp: hidden layer(s):\n");
 
-	printf("antwerp: hidden layer(s):\n");
+		struct layer *root = network->hidden;
 
-	struct layer *root = network->hidden;
-
-	int i = 2;
-	for(;; i++) {
-		if(root == NULL) break;
-		printf("\t%d: ", i);
-		display_layer(root);
-		root = root->child;
+		for(;; line++) {
+			if(root == NULL) break;
+			printf("\t%d: ", line);
+			display_layer(root);
+			root = root->child;
+		}
+	} else if((flags & DISPLAY_HIDE_OUTPUT) == 0) {
+		printf("antwerp: ouput layer:\n\t%d: ", line);
+		display_layer(network->output);
 	}
-
-	printf("antwerp: ouput layer:\n\t%d: ", i);
-
-	display_layer(network->output);
 
 	return 0;
 }

@@ -12,8 +12,8 @@ int main(int, char**) {
 	int ret = mnist_training_init(&dataset);
 	if(ret == -1) return -1;
 
-	struct layer *l1 = CREATE_HIDDEN_LAYER(dataset.hidden_nodes, 0, SIGMOID);
-	struct layer *l2 = CREATE_HIDDEN_LAYER(dataset.hidden_nodes, 0, SIGMOID);
+	struct layer *l1 = CREATE_HIDDEN_LAYER(dataset.hidden_nodes, 0, RELU);
+	struct layer *l2 = CREATE_HIDDEN_LAYER(dataset.hidden_nodes, 0, RELU);
 
 	printf("antwerp: establishing network connections\n");
 
@@ -23,7 +23,7 @@ int main(int, char**) {
 	struct layer *input = create_input_layer(l1, dataset.input_nodes);
 	if(input == NULL) return -1;
 
-	struct layer *output = create_output_layer(l2, SIGMOID, dataset.output_nodes);
+	struct layer *output = create_output_layer(l2, RELU, dataset.output_nodes);
 	if(input == NULL) return -1;
 	
 	struct network network = {

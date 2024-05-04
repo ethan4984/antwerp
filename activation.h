@@ -19,24 +19,24 @@
 })
 
 struct activation {
-	float (*function)(float);
-	float (*derivative)(float);
+	double (*function)(double);
+	double (*derivative)(double);
 };
 
-static inline float sigmoid(float x) {
+static inline double sigmoid(double x) {
 	return 1.0 / (1.0 + exp(-x));
 }
 
-static inline float sigmoid_derivative(float x) {
+static inline double sigmoid_derivative(double x) {
 	return exp(-x) / ((1 + exp(-x)) * (1 + exp(-x)));
 }
 
-static inline float relu(float x) {
+static inline double relu(double x) {
 	if(x) return x;
 	else return 0.0;
 }
 
-static inline float relu_derivative(float x) {
+static inline double relu_derivative(double x) {
 	if(x) return 1.0;
 	else return 0.0;
 }
