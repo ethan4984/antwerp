@@ -7,7 +7,7 @@ static int initialise_layer(struct network*, struct layer*);
 static int sew_signals(struct layer*);
 static int display_layer(struct layer*);
 
-#define RANDOM_WEIGHT (2.0 * ((double)rand() / RAND_MAX) - 1.0) * 0.2;
+#define RANDOM_WEIGHT (2.0 * ((double)rand() / RAND_MAX) - 1.0) * 0.01;
 
 static int initialise_layer(struct network *network, struct layer *layer) {
 	if(network == NULL || layer == NULL) return -1;
@@ -142,19 +142,6 @@ int initialise_layers(struct network *network, struct layer *root, ...) {
 	va_end(args);
 
 	return 0;
-}
-
-struct perceptron *layer_output(struct layer *layer) {
-	if(layer == NULL) return NULL;
-
-	struct perceptron *perceptron = NULL;
-	for(int i = 0; i < layer->n; i++) {
-		if(perceptron == NULL || (layer->perceptrons[i].a > perceptron->a)) {
-			perceptron = &layer->perceptrons[i];
-		}
-	}
-
-	return perceptron;
 }
 
 static int display_layer(struct layer *layer) {

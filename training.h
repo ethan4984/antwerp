@@ -9,7 +9,6 @@ struct sample {
 	int length;
 	void *data;
 
-	int output;
 	int expected;
 };
 

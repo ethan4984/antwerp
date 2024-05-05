@@ -56,9 +56,7 @@ static double cost_gradient(struct perceptron *perceptron,
 	if(perceptron == NULL || signal == NULL ||
 			sample == NULL || perceptron->layer == NULL) return NAN;
 	
-	struct layer *layer = perceptron->layer;
-
-	return layer->activation.derivative(perceptron->z);
+	return 0.0;
 }
 
 static int backward_propagate_layer(struct layer *layer, struct sample *sample) {
@@ -83,6 +81,10 @@ int backward_propagate(struct network *network, struct sample *sample) {
 	if(network == NULL || sample == NULL) return -1;
 
 	struct layer *root = network->output;
+
+	backward_propagate_layer(root, sample);
+
+	return 0;
 
 	for(;;) { 
 		if(root == NULL) break;

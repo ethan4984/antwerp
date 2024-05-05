@@ -25,13 +25,27 @@ int train(struct network *network) {
 			return -1;
 		}
 
-		struct perceptron *result = layer_output(network->output);
-		if(result == NULL) return -1;
+		struct perceptron *result = NULL;
+		for(int i = 0; i < network->output->n; i++) {
+			if(result == NULL || (network->output->perceptrons[i].a > result->a)) {
+				result = &network->output->perceptrons[i];
+			}
+		}
+
+		double cost = 0.0;
+		for(int i = 0; i < network->output->n; i++) {
+			double expected = (i == sample.expected) ? 1.0 : 0.0;
+
+			cost += (network->output->perceptrons[i].a - expected) * 
+				(network->output->perceptrons[i].a - expected);
+		}
+
+		int answer = ((uintptr_t)result - (uintptr_t)network->output->perceptrons)
+			/ sizeof(struct perceptron);
 
 		printf("-----------------\nantwerp: expected output: %d\n", sample.expected);
 		display_network(network, DISPLAY_HIDE_INPUT | DISPLAY_HIDE_HIDDEN);
-		printf("antwerp: output: %ld\n", ((uintptr_t)result - (uintptr_t)network->output->perceptrons)
-				/ sizeof(struct perceptron));
+		printf("antwerp: output: %d with cost %f\n", answer, cost);
 
 		ret = backward_propagate(network, &sample);
 		if(ret == -1) {
