@@ -62,6 +62,19 @@ perceptrons
 		layers weights and biases, you differentiate using the chain rule. It also follows that layer L-1
 		will have less compositions compared to layer L
 
+		The logic is you want to descend down the cost function:
+			C = (y - a)^2
+			z = aW + b
+			a = σ(z)
+
+			dC/dw = dC/da dz/dw d z
+
+			dC/da = 2(y - a)
+			dz/dw = a
+			da/dz = σ'(z)
+
+			dC/dw = 2(y - a) * a * σ'(z)
+
 		? Back propagation, compute dC/dw and dC/db on layer L, calculate for w1,w2,w3,...
 
 	Ideas:

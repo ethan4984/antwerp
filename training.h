@@ -9,6 +9,7 @@ struct sample {
 	int length;
 	void *data;
 
+	int output;
 	int expected;
 };
 
@@ -24,11 +25,6 @@ struct training_set {
 	void *private;
 	int (*get_sample)(void*, struct sample*, int);
 };
-
-static inline double cost_mse(struct sample *sample, double y) {
-	if(sample == NULL) return NAN;
-	return (sample->expected - y) * (sample->expected - y);
-}
 
 int train(struct network *network);
 

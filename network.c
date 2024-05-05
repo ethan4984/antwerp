@@ -3,12 +3,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-static int initialise_layer(struct layer*);
+static int initialise_layer(struct network*, struct layer*);
 static int sew_signals(struct layer*);
 static int display_layer(struct layer*);
 
-static int initialise_layer(struct layer *layer) {
-	if(layer == NULL) return -1;
+#define RANDOM_WEIGHT (2.0 * ((double)rand() / RAND_MAX) - 1.0) * 0.2;
+
+static int initialise_layer(struct network *network, struct layer *layer) {
+	if(network == NULL || layer == NULL) return -1;
+
+	layer->network = network;
 
 	for(int i = 0; i < layer->n; i++) {
 		struct perceptron *perceptron = &layer->perceptrons[i];
@@ -19,7 +23,7 @@ static int initialise_layer(struct layer *layer) {
 				perceptron->n, 1);
 
 		for(int j = 0; j < perceptron->n; j++) {
-			perceptron->signals[j].weight = (double)rand() / RAND_MAX * (double)0.001;
+			perceptron->signals[j].weight = RANDOM_WEIGHT;
 		}
 	}
 
@@ -45,8 +49,8 @@ static int sew_signals(struct layer *layer) {
 }
 
 // connect all nodes in the input layer to the perceptrons in the joint layer
-struct layer *create_input_layer(struct layer *joint, int n) {
-	if(joint == NULL) return NULL;
+struct layer *create_input_layer(struct network *network, struct layer *joint, int n) {
+	if(network == NULL || joint == NULL) return NULL;
 
 	struct layer *input = calloc(sizeof(struct layer) + sizeof(struct perceptron) * n, 1);
 	input->n = n;
@@ -56,19 +60,24 @@ struct layer *create_input_layer(struct layer *joint, int n) {
 
 		perceptron->n = input->n;
 		perceptron->signals = calloc(sizeof(struct signal) * perceptron->n, 1);
+		perceptron->layer = input;
 
 		for(int j = 0; j < input->n; j++) {
 			perceptron->signals[j].emitter = &input->perceptrons[j];
-			perceptron->signals[j].weight = (double)rand() / RAND_MAX * (double)0.001;
+			perceptron->signals[j].weight = RANDOM_WEIGHT;
 		}
 	}
+
+	input->network = network;
+	network->input = input;
 
 	return input;
 }
 
 // connect all perceptrons the joint layer to the nodes in the output layer
-struct layer *create_output_layer(struct layer *joint, struct activation activation, int n) {
-	if(joint == NULL) return NULL;
+struct layer *create_output_layer(struct network *network, struct layer *joint,
+		struct function activation, int n) {
+	if(network == NULL || joint == NULL) return NULL;
 
 	struct layer *output = calloc(sizeof(struct layer) + sizeof(struct perceptron) * n, 1);
 
@@ -80,17 +89,23 @@ struct layer *create_output_layer(struct layer *joint, struct activation activat
 
 		perceptron->n = joint->n;
 		perceptron->signals = calloc(sizeof(struct signal) * perceptron->n, 1);
+		perceptron->layer = output;
 
 		for(int j = 0; j < joint->n; j++) {
 			perceptron->signals[j].emitter = &joint->perceptrons[j];
-			perceptron->signals[j].weight = (double)rand() / RAND_MAX * (double)0.001;
+			perceptron->signals[j].weight = RANDOM_WEIGHT;
 		}
 	}
+
+	output->network = network;
+	network->output = output;
 
 	return output;
 }
 
-int initialise_layers(struct layer *root, ...) {
+int initialise_layers(struct network *network, struct layer *root, ...) {
+	if(network == NULL) return -1;
+
 	va_list args;
 	va_start(args, root);
 
@@ -99,14 +114,14 @@ int initialise_layers(struct layer *root, ...) {
 		if(root == NULL) return -1;
 	}
 
-	int ret = initialise_layer(root);
+	int ret = initialise_layer(network, root);
 	if(ret == -1) return -1;
 
 	for(;;) { 
 		struct layer *layer = va_arg(args, struct layer*);
 		if(layer == NULL) break;
 
-		ret = initialise_layer(layer);
+		ret = initialise_layer(network, layer);
 		if(ret == -1) continue;
 
 		root->child = layer;
@@ -116,7 +131,11 @@ int initialise_layers(struct layer *root, ...) {
 
 	for(;;) {
 		if(root == NULL) break;
+
+		network->hidden = root;
+
 		sew_signals(root);
+
 		root = root->parent;
 	}
 
@@ -125,11 +144,24 @@ int initialise_layers(struct layer *root, ...) {
 	return 0;
 }
 
+struct perceptron *layer_output(struct layer *layer) {
+	if(layer == NULL) return NULL;
+
+	struct perceptron *perceptron = NULL;
+	for(int i = 0; i < layer->n; i++) {
+		if(perceptron == NULL || (layer->perceptrons[i].a > perceptron->a)) {
+			perceptron = &layer->perceptrons[i];
+		}
+	}
+
+	return perceptron;
+}
+
 static int display_layer(struct layer *layer) {
 	for(int i = 0; layer && i < layer->n; i++) {
 		struct perceptron *perceptron = &layer->perceptrons[i];
 
-		printf("%f ", perceptron->y);
+		printf("%f ", perceptron->a);
 	}
 
 	printf("\n");

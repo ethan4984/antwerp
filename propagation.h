@@ -5,5 +5,6 @@
 #include <training.h>
 
 int forward_propagate(struct network*);
+int backward_propagate(struct network*, struct sample*);
 
 #endif
