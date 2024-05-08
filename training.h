@@ -26,5 +26,6 @@ struct training_set {
 };
 
 int train(struct network *network);
+int test(struct network *network);
 
 #endif

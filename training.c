@@ -1,15 +1,18 @@
 #include <training.h>
+#include <propagation.h>
 
 #include <stdio.h>
 #include <stdint.h>
+
+#define ANTWERP_DEBUG
 
 int train(struct network *network) {
 	if(network == NULL || network->training_set == NULL) return -1;
 
 	struct training_set *training_set = network->training_set;
 
-	int a = 0;
-
+	printf("antwerp: training...\n");
+	
 	for(int n = 0;; n++) {
 		struct sample sample;
 
@@ -17,7 +20,7 @@ int train(struct network *network) {
 		if(ret == -1) break;
 
 		for(int i = 0; i < sample.length && i < network->n[0]; i++) {
-			network->a[0][i] = ((double)(*(uint8_t*)(sample.data + i))) / (double)255;
+			network->a[0][i] = (double)(*(uint8_t*)(sample.data + i)) / (double)255;
 		}
 
 		ret = forward_propagate(network);
@@ -26,6 +29,13 @@ int train(struct network *network) {
 			return -1;
 		}
 
+		double cost = 0.0;
+		for(int i = 0; i < network->n[network->layers - 1]; i++) {
+			cost += (network->a[network->layers - 1][i] - network->expected[i]) *
+				(network->a[network->layers - 1][i] - network->expected[i]);
+		}
+
+#ifdef ANTWERP_DEBUG
 		int result;
 		double tmp = -1.0;
 		for(int i = 0; i < network->n[network->layers - 1]; i++) {
@@ -35,22 +45,17 @@ int train(struct network *network) {
 			}
 		}
 
-		double cost = 0.0;
-		for(int i = 0; i < network->n[network->layers - 1]; i++) {
-			cost += (network->a[network->layers - 1][i] - network->expected[i]) *
-				(network->a[network->layers - 1][i] - network->expected[i]);
-		}
-
 		printf("-----------------\nantwerp: expected output: %d\n", sample.expected);
 		printf("antwerp: output layer:\n\t0: ");
 		network_display_layer(network, 2);
 		printf("antwerp: result: %d with cost %f\n", result, cost);
+#endif
 
 		for(int i = 0; i < network->n[network->layers - 1]; i++) {
 			network->expected[i] = (i == sample.expected) ? 1.0 : 0.0;
 		}
 
-		ret = backward_propagate(network, &sample);
+		ret = backward_propagate(network);
 		if(ret == -1) {
 			printf("antwerp: failure during backwards propagation on sample n=%d\n", n);
 			return -1;

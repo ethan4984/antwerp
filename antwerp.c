@@ -16,11 +16,11 @@ static int network_mnist(void) {
 
 	struct network network = {
 		.training_set = &dataset,
-		.learning_rate = 0.05
+		.learning_rate = 0.005
 	};
 
 	ret = network_init(&network, 3, SIGMOID, dataset.input_nodes, 0,
-			dataset.hidden_nodes, 0,
+			800, 0,
 			dataset.output_nodes, 0);
 	if(ret == -1) return -1;
 
@@ -83,14 +83,12 @@ static int network_test(void) {
 
 	network_display(&network);
 
-	for(int i = 0; i < 1000; i++) {
-		backward_propagate(&network);
+	for(int i = 0; i < 100; i++) backward_propagate(&network);
 
-		ret = forward_propagate(&network);
-		if(ret == -1) return -1;
+	ret = forward_propagate(&network);
+	if(ret == -1) return -1;
 
-		network_display(&network);
-	}
+	network_display(&network);
 
 	return 0;
 }
