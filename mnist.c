@@ -112,7 +112,7 @@ int mnist_training_init(struct training_set *training_set) {
 
 	training_set->output_nodes = 10;
 	training_set->input_nodes = image_set->hdr.row_cnt * image_set->hdr.column_cnt;
-	training_set->hidden_nodes = 800;
+	training_set->hidden_nodes = 400;
 
 	return 0;
 }

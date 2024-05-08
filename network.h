@@ -13,8 +13,8 @@ struct network {
 
 	double ***weights;
 	double ***dcdw;
-	double ***dcda;
 
+	double **dcdb;
 	double **a;
 	double **z;
 

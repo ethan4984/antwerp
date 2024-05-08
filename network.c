@@ -29,7 +29,7 @@ int network_init(struct network *network, int layers, struct function activation
 
 	network->weights = malloc(sizeof(double**) * layers);
 	network->dcdw = malloc(sizeof(double**) * layers);
-	network->dcda = malloc(sizeof(double**) * layers);
+	network->dcdb = malloc(sizeof(double*) * layers);
 	network->a = malloc(sizeof(double*) * layers);
 	network->z = malloc(sizeof(double*) * layers);
 	network->n = malloc(sizeof(int) * layers);
@@ -62,15 +62,14 @@ int network_init(struct network *network, int layers, struct function activation
 
 		network->weights[network->layers] = malloc(sizeof(double*) * n);
 		network->dcdw[network->layers] = malloc(sizeof(double*) * n);
-		network->dcda[network->layers] = malloc(sizeof(double*) * n);
 		for(int i = 0; i < n; i++) {
 			network->weights[network->layers][i] = malloc(sizeof(double) * total_weights);
 			network->dcdw[network->layers][i] = malloc(sizeof(double) * total_weights);
-			network->dcda[network->layers][i] = malloc(sizeof(double) * total_weights);
 		}
 
 		network->a[network->layers] = malloc(sizeof(double) * n);
 		network->z[network->layers] = malloc(sizeof(double) * n);
+		network->dcdb[network->layers] = malloc(sizeof(double) * n);
 
 		int ret = network_init_weights(network, network->layers, total_weights);
 		if(ret == -1) return -1;

@@ -83,12 +83,14 @@ static int network_test(void) {
 
 	network_display(&network);
 
-	for(int i = 0; i < 100; i++) backward_propagate(&network);
+	for(int i = 0; i < 1000; i++) {
+		backward_propagate(&network);
 
-	ret = forward_propagate(&network);
-	if(ret == -1) return -1;
+		ret = forward_propagate(&network);
+		if(ret == -1) return -1;
 
-	network_display(&network);
+		network_display(&network);
+	}
 
 	return 0;
 }
