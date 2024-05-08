@@ -1,98 +1,93 @@
 #include <propagation.h>
-#include <network.h>
 
+#include <stddef.h>
 #include <stdio.h>
-
-static int forward_propagate_layer(struct layer*);
-
-static int backward_propagate_layer(struct layer*, struct sample*);
-static double cost_gradient(struct perceptron*, struct signal*, struct sample*);
-
-static int forward_propagate_layer(struct layer *layer) {
-	if(layer == NULL) return -1;
-
-	for(int i = 0; i < layer->n; i++) {
-		struct perceptron *perceptron = &layer->perceptrons[i];
-
-		perceptron->z = layer->bias;
-
-		for(int j = 0; j < perceptron->n; j++) {
-			struct signal *signal = &perceptron->signals[j];
-	
-			if(signal->emitter == NULL) continue;
-
-			perceptron->z += signal->weight * signal->emitter->a;
-		}
-
-		if(layer->activation.function == NULL) continue;
-
-		perceptron->a = layer->activation.function(perceptron->z);
-	}
-
-	return 0;
-}
 
 int forward_propagate(struct network *network) {
 	if(network == NULL) return -1;
 
-	struct layer *root = network->hidden;
+	for(int i = 1; i < network->layers; i++) {
+		for(int j = 0; j < network->n[i]; j++) {
+			network->z[i][j] = network->biases[i];
 
-	for(;;) {
-		if(root == NULL) break;
+			for(int k = 0; k < network->n[i - 1]; k++) {
+				network->z[i][j] += network->a[i - 1][k] * network->weights[i][j][k];
+			}
 
-		int ret = forward_propagate_layer(root);
-		if(ret == -1) return -1;
-
-		root = root->child;	
-	}
-
-	forward_propagate_layer(network->output);
-
-	return 0;
-}
-
-static double cost_gradient(struct perceptron *perceptron,
-		struct signal *signal, struct sample *sample) {
-	if(perceptron == NULL || signal == NULL ||
-			sample == NULL || perceptron->layer == NULL) return NAN;
-	
-	return 0.0;
-}
-
-static int backward_propagate_layer(struct layer *layer, struct sample *sample) {
-	if(layer == NULL || layer->network == NULL) return -1;
-
-	struct network *network = layer->network;
-
-	for(int i = 0; i < layer->n; i++) {
-		struct perceptron *perceptron = &layer->perceptrons[i];
-
-		for(int j = 0; j < perceptron->n; j++) {
-			struct signal *signal = &perceptron->signals[i];
-
-			signal->weight -= network->learning_rate * cost_gradient(perceptron, signal, sample);
+			network->a[i][j] = network->activation.function(network->z[i][j]);
 		}
 	}
 
 	return 0;
 }
 
-int backward_propagate(struct network *network, struct sample *sample) {
-	if(network == NULL || sample == NULL) return -1;
+static double activation_sum(struct network *network, int layer, int k) {
+	double sum = 0.0;
 
-	struct layer *root = network->output;
+	for(int j = 0; j < network->n[layer]; j++) {
+		double dcda = (layer == network->layers - 1) ? 2 * (network->a[layer][j] - network->expected[j]) :
+			activation_sum(network, layer + 1, j);
 
-	backward_propagate_layer(root, sample);
+		sum += network->weights[layer][j][k] *
+			network->activation.derivative(network->z[layer][j]) * dcda;
+	}
 
-	return 0;
+	return sum;
+}
 
-	for(;;) { 
-		if(root == NULL) break;
+int backward_propagate(struct network *network) {
+	if(network == NULL) return -1;
 
-		int ret = backward_propagate_layer(root, sample);
-		if(ret == -1) return -1;
+	int layer = network->layers - 1;
 
-		root = root->parent;
+	for(int i = 0; i < network->n[layer]; i++) {
+		for(int j = 0; j < network->n[layer - 1]; j++) {
+			double dzdw = network->a[layer - 1][j]; 
+			double dadz = network->activation.derivative(network->z[layer][i]);
+			double dcda = 2 * (network->a[layer][i] - network->expected[i]);
+
+			double dcdw = dzdw * dadz * dcda;
+
+			network->dcda[layer][i][j] = dcda;
+			network->dcdw[layer][i][j] = dcdw;
+
+#ifdef ANTWERP_DEBUG
+			printf("antwerp: dcdw on L=%d k=%d j=%d: %f\n", layer, j, i, dcdw);
+			printf("\tdzdw: %f\n", dzdw);
+			printf("\tdadz: %f\n", dadz);
+			printf("\tdcda: %f\n", dcda);
+#endif
+		}
+	}
+
+	for(; layer-- > 1;) {
+		for(int i = 0; i < network->n[layer]; i++) {
+			for(int j = 0; j < network->n[layer - 1]; j++) {
+				double dzdw = network->a[layer - 1][j];
+				double dadz = network->activation.derivative(network->z[layer][i]);
+				double dcda = activation_sum(network, layer + 1, i);
+
+				double dcdw = dzdw * dadz * dcda;
+
+				network->dcdw[layer][i][j] = dcdw;
+				network->dcda[layer][i][j] = dcda;
+
+#ifdef ANTWERP_DEBUG
+				printf("antwerp: dcdw on L=%d k=%d j=%d: %f\n", layer, j, i, dcdw);
+				printf("\tdzdw: %f\n", dzdw);
+				printf("\tdadz: %f\n", dadz);
+				printf("\tdcda: %f\n", dcda);
+#endif
+			}
+		}
+	}
+
+	for(int i = network->layers; i-- > 1;) {
+		for(int j = 0; j < network->n[i]; j++) {
+			for(int k = 0; k < network->n[i - 1]; k++) {
+				network->weights[i][j][k] -= network->learning_rate * network->dcdw[i][j][k];
+			}
+		}
 	}
 
 	return 0;

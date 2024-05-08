@@ -1,5 +1,4 @@
 #include <training.h>
-#include <propagation.h>
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,14 +8,16 @@ int train(struct network *network) {
 
 	struct training_set *training_set = network->training_set;
 
+	int a = 0;
+
 	for(int n = 0;; n++) {
 		struct sample sample;
 
 		int ret = training_set->get_sample(training_set->private, &sample, n);
 		if(ret == -1) break;
 
-		for(int i = 0; i < sample.length && i < network->input->n; i++) {
-			network->input->perceptrons[i].a = fabs(*(char*)(sample.data + i) / (double)255);
+		for(int i = 0; i < sample.length && i < network->n[0]; i++) {
+			network->a[0][i] = ((double)(*(uint8_t*)(sample.data + i))) / (double)255;
 		}
 
 		ret = forward_propagate(network);
@@ -25,31 +26,33 @@ int train(struct network *network) {
 			return -1;
 		}
 
-		struct perceptron *result = NULL;
-		for(int i = 0; i < network->output->n; i++) {
-			if(result == NULL || (network->output->perceptrons[i].a > result->a)) {
-				result = &network->output->perceptrons[i];
+		int result;
+		double tmp = -1.0;
+		for(int i = 0; i < network->n[network->layers - 1]; i++) {
+			if(network->a[network->layers - 1][i] > tmp) {
+				tmp = network->a[network->layers - 1][i];
+				result = i;
 			}
 		}
 
 		double cost = 0.0;
-		for(int i = 0; i < network->output->n; i++) {
-			double expected = (i == sample.expected) ? 1.0 : 0.0;
-
-			cost += (network->output->perceptrons[i].a - expected) * 
-				(network->output->perceptrons[i].a - expected);
+		for(int i = 0; i < network->n[network->layers - 1]; i++) {
+			cost += (network->a[network->layers - 1][i] - network->expected[i]) *
+				(network->a[network->layers - 1][i] - network->expected[i]);
 		}
 
-		int answer = ((uintptr_t)result - (uintptr_t)network->output->perceptrons)
-			/ sizeof(struct perceptron);
-
 		printf("-----------------\nantwerp: expected output: %d\n", sample.expected);
-		display_network(network, DISPLAY_HIDE_INPUT | DISPLAY_HIDE_HIDDEN);
-		printf("antwerp: output: %d with cost %f\n", answer, cost);
+		printf("antwerp: output layer:\n\t0: ");
+		network_display_layer(network, 2);
+		printf("antwerp: result: %d with cost %f\n", result, cost);
+
+		for(int i = 0; i < network->n[network->layers - 1]; i++) {
+			network->expected[i] = (i == sample.expected) ? 1.0 : 0.0;
+		}
 
 		ret = backward_propagate(network, &sample);
 		if(ret == -1) {
-			printf("antwerp: failure during back propagation on sample n=%d\n", n);
+			printf("antwerp: failure during backwards propagation on sample n=%d\n", n);
 			return -1;
 		}
 	}

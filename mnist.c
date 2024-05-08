@@ -101,6 +101,9 @@ int mnist_training_init(struct training_set *training_set) {
 
 	if(label_set->hdr.magic_number != MNIST_LABEL_SIGNATURE) return -1;
 
+	printf("antwerp: mnist: column: %d\n", image_set->hdr.column_cnt);
+	printf("antwerp: mnist: row: %d\n", image_set->hdr.row_cnt);
+
 	mnist_training_data->image_set = image_set;
 	mnist_training_data->label_set = label_set;
 

@@ -3,7 +3,7 @@ PROGRAM := antwerp
 CC ?= cc
 LD ?= $(CC)
 
-CFLAGS  ?= -Wall -Wextra -O0 -pipe -c
+CFLAGS  ?= -Wall -Wextra -O0 -pipe -c -g
 LDFLAGS ?= -lm
 
 INTERNALCFLAGS := \
