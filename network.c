@@ -7,6 +7,9 @@
 
 #define RANDOM_WEIGHT (2.0 * ((double)rand() / RAND_MAX) - 1.0) * 0.1;
 
+static void display_layer_activations(struct network *network, int layer);
+static void display_layer_weights(struct network *network, int layer);
+
 static int network_init_weights(struct network *network, int layer, int n) {
 	if(network == NULL || network->weights == NULL) return -1;
 
@@ -84,30 +87,62 @@ int network_init(struct network *network, int layers, struct function activation
 	return 0;
 }
 
-void network_display_layer(struct network *network, int layer) {
+static void display_layer_activations(struct network *network, int layer) {
 	for(int i = 0; i < network->n[layer]; i++) {
 		printf("%f ", network->a[layer][i]);
 	}
 	printf("\n");
 }
 
-int network_display(struct network *network) {
+static void display_layer_weights(struct network *network, int layer) {
+	printf("1: ");
+	for(int i = 0; i < network->n[layer];) {
+		for(int j = 0; j < network->n[layer - 1]; j++) {
+			printf("%f ", network->weights[layer][i][j]);
+		}
+		if(++i < network->n[layer]) printf("\n\t\t%d: ", i + 1);
+	}
+	printf("\n");
+}
+
+int network_display(struct network *network, int flags) {
 	if(network == NULL) return -1;
 
-	int line = 0;
+	printf("-----------------------------------\n");
 
-	printf("antwerp: input layer:\n\t%d: ", line++);
-	network_display_layer(network, 0);
-
-	printf("antwerp: hidden layer(s):\n");
-
-	for(int layer = 1; layer < network->layers - 1; line++, layer++) {
-		printf("\t%d: ", line);
-		network_display_layer(network, layer);
+	if(flags & DISPLAY_INPUT) { 
+		if(flags & DISPLAY_ACTIVATIONS) {
+			printf("antwerp: input layer\n");
+			printf("\tactivations:\n\t\t");
+			display_layer_activations(network, 0);
+		}
 	}
 
-	printf("antwerp: ouput layer:\n\t%d: ", line);
-	network_display_layer(network, network->layers - 1);
+	if(flags & DISPLAY_HIDDEN)  {
+		for(int layer = 1; layer < network->layers - 1; layer++) {
+			printf("antwerp: hidden layers %d\n", layer);
+			if(flags & DISPLAY_WEIGHTS) {
+				printf("\tweights:\n\t\t");
+				display_layer_weights(network, layer);
+			} if(flags & DISPLAY_ACTIVATIONS) {
+				printf("\tactivations:\n\t\t");
+				display_layer_activations(network, layer);
+			}
+		}
+	}
+
+	if(flags & DISPLAY_OUTPUT)  {
+		printf("antwerp: output layer\n");
+		if(flags & DISPLAY_WEIGHTS) {
+			printf("\tweights:\n\t\t");
+			display_layer_weights(network, network->layers - 1);
+		} if(flags & DISPLAY_ACTIVATIONS) {
+			printf("\tactivations:\n\t\t");
+			display_layer_activations(network, network->layers - 1);
+		}
+	}
+
+	printf("-----------------------------------\n");
 
 	return 0;
 }

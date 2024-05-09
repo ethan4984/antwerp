@@ -16,7 +16,8 @@ static int network_mnist(void) {
 
 	struct network network = {
 		.training_set = &dataset,
-		.learning_rate = 0.005
+		.learning_rate = 0.05,
+		.batch_size = 32
 	};
 
 	ret = network_init(&network, 3, SIGMOID, dataset.input_nodes, 0,
@@ -25,6 +26,9 @@ static int network_mnist(void) {
 	if(ret == -1) return -1;
 
 	ret = train(&network);
+	if(ret == -1) return -1;
+
+	ret = test(&network);
 	if(ret == -1) return -1;
 
 	return 0;
@@ -75,20 +79,42 @@ static int network_test(void) {
 	network.weights[3][1][1] = 0.19;
 	network.weights[3][1][2] = 0.30;
 
-	network.expected[0] = 0.0;
-	network.expected[1] = 1.0;
+	network.expected[0] = 0.1;
+	network.expected[1] = 0.8;
 
 	ret = forward_propagate(&network);
 	if(ret == -1) return -1;
 
-	network_display(&network);
+	network_display(&network, DISPLAY_ACTIVATIONS |
+			DISPLAY_WEIGHTS | DISPLAY_INPUT | DISPLAY_HIDDEN |
+			DISPLAY_OUTPUT);
 
-	for(int i = 0; i < 100; i++) backward_propagate(&network);
+	for(int i = 0; i < 1000; i++) {
+		if(i % 2 == 0) {
+			network.a[0][0] = 0.10;
+			network.a[0][1] = -0.20;
+		} else {
+			network.a[0][0] = 0.40;
+			network.a[0][1] = 0.80;
+		}
+	
+		backward_propagate(&network);
+		forward_propagate(&network);
+	}
 
-	ret = forward_propagate(&network);
-	if(ret == -1) return -1;
+	network.a[0][0] = 0.09;
+	network.a[0][1] = -0.19;
+	forward_propagate(&network);
+	network_display(&network, DISPLAY_ACTIVATIONS |
+			DISPLAY_WEIGHTS | DISPLAY_INPUT | DISPLAY_HIDDEN |
+			DISPLAY_OUTPUT);
 
-	network_display(&network);
+	network.a[0][0] = 0.39;
+	network.a[0][1] = 0.81;
+	forward_propagate(&network);
+	network_display(&network, DISPLAY_ACTIVATIONS |
+			DISPLAY_WEIGHTS | DISPLAY_INPUT | DISPLAY_HIDDEN |
+			DISPLAY_OUTPUT);
 
 	return 0;
 }

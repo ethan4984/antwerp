@@ -17,17 +17,28 @@
 	}; \
 })
 
+#define TANH ({ \
+	(struct function) { \
+		.function = tanh, \
+		.derivative = tanh_derivative \
+	}; \
+})
+
 struct function {
 	double (*function)(double);
 	double (*derivative)(double);
 };
+
+static inline double tanh_derivative(double x) {
+	return 1 - tanh(x) * tanh(x);
+}
 
 static inline double sigmoid(double x) {
 	return 1.0 / (1.0 + exp(-x));
 }
 
 static inline double sigmoid_derivative(double x) {
-	return exp(-x) / ((1 + exp(-x)) * (1 + exp(-x)));
+	return sigmoid(x) * (1 - sigmoid(x));
 }
 
 static inline double relu(double x) {

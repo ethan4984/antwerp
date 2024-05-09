@@ -9,6 +9,7 @@ struct network {
 	double learning_rate;
 
 	struct function activation;
+	int batch_size;
 	int layers;
 
 	double ***weights;
@@ -23,8 +24,13 @@ struct network {
 	int *n;
 };
 
+#define DISPLAY_WEIGHTS (1 << 0)
+#define DISPLAY_ACTIVATIONS (1 << 1)
+#define DISPLAY_INPUT (1 << 2)
+#define DISPLAY_OUTPUT (1 << 3)
+#define DISPLAY_HIDDEN (1 << 4)
+
 int network_init(struct network*, int, struct function, ...);
-int network_display(struct network*);
-void network_display_layer(struct network*, int);
+int network_display(struct network*, int flags);
 
 #endif

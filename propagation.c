@@ -25,7 +25,7 @@ static double activation_sum(struct network *network, int layer, int k) {
 	double sum = 0.0;
 
 	for(int j = 0; j < network->n[layer]; j++) {
-		double dcda = (layer == network->layers - 1) ? 2 * (network->a[layer][j] - network->expected[j]) :
+		double dcda = (layer == network->layers - 1) ? (network->a[layer][j] - network->expected[j]) :
 			activation_sum(network, layer + 1, j);
 
 		sum += network->weights[layer][j][k] *
@@ -42,16 +42,18 @@ int backward_propagate(struct network *network) {
 
 	for(int k = 0; k < network->n[layer]; k++) {
 		double dadz = network->activation.derivative(network->z[layer][k]);
-		double dcda = 2 * (network->a[layer][k] - network->expected[k]);
+		double dcda = (network->a[layer][k] - network->expected[k]);
 		double dcdb = dadz * dcda;
 
 		network->dcdb[layer][k] = dcdb;
+		network->biases[layer] -= network->learning_rate * dcdb;
 
 		for(int j = 0; j < network->n[layer - 1]; j++) {
 			double dzdw = network->a[layer - 1][j]; 
 			double dcdw = dzdw * dadz * dcda;
 
 			network->dcdw[layer][k][j] = dcdw;
+			network->weights[layer][k][j] -= network->learning_rate * dcdw;
 
 #ifdef ANTWERP_DEBUG
 			printf("antwerp: dcdw on L=%d j=%d k=%d: %f\n", layer, j, k, dcdw);
@@ -64,8 +66,8 @@ int backward_propagate(struct network *network) {
 
 	for(; layer-- > 1;) {
 		for(int k = 0; k < network->n[layer]; k++) {
-			double dadz = network->activation.derivative(network->z[layer][k]);
 			double dcda = activation_sum(network, layer + 1, k);
+			double dadz = network->activation.derivative(network->z[layer][k]);
 
 			double dcdb = dadz * dcda;
 
@@ -78,7 +80,7 @@ int backward_propagate(struct network *network) {
 				network->dcdw[layer][k][j] = dcdw;
 
 #ifdef ANTWERP_DEBUG
-				printf("antwerp: dcdw on L=%d j=%d k=%d: %f\n", layer, j, i, dcdw);
+				printf("antwerp: dcdw on L=%d j=%d k=%d: %f\n", layer, j, k, dcdw);
 				printf("\tdzdw: %f\n", dzdw);
 				printf("\tdadz: %f\n", dadz);
 				printf("\tdcda: %f\n", dcda);
